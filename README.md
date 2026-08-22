@@ -24,6 +24,11 @@ Generating a file (tryprofound.com, 120 pages, spec compliant):
 
 ![Generate](docs/generate.png)
 
+AI-readiness audit and retrieval eval for the generated file:
+
+![AI readiness](docs/ai-readiness.png)
+![Retrieval eval](docs/retrieval-eval.png)
+
 Monitored sites and a site's snapshot history:
 
 ![Monitored sites](docs/monitored-sites.png)

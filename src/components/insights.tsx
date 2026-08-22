@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 import type { AuditReport, CheckStatus } from "@/lib/audit";
 import type { EvalReport } from "@/lib/eval";
 
@@ -10,8 +10,16 @@ const STATUS_COLOR: Record<CheckStatus, string> = {
   fail: "text-red-400",
 };
 
-function useReport<T>(endpoint: string, jobId: string) {
-  const [report, setReport] = useState<T | null>(null);
+/**
+ * Runs a report endpoint. The report itself lives in the parent so switching
+ * tabs (which unmounts the panel) does not discard it or re-spend LLM calls.
+ */
+function useReport<T>(
+  endpoint: string,
+  jobId: string,
+  report: T | null,
+  setReport: Dispatch<SetStateAction<T | null>>,
+) {
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
 
@@ -37,8 +45,16 @@ function useReport<T>(endpoint: string, jobId: string) {
   return { report, error, running, run };
 }
 
-export function ReadinessPanel({ jobId }: { jobId: string }) {
-  const { report, error, running, run } = useReport<AuditReport>("/api/audit", jobId);
+export function ReadinessPanel({
+  jobId,
+  report: value,
+  onReport,
+}: {
+  jobId: string;
+  report: AuditReport | null;
+  onReport: Dispatch<SetStateAction<AuditReport | null>>;
+}) {
+  const { report, error, running, run } = useReport<AuditReport>("/api/audit", jobId, value, onReport);
 
   return (
     <Panel
@@ -108,8 +124,16 @@ export function ReadinessPanel({ jobId }: { jobId: string }) {
   );
 }
 
-export function EvalPanel({ jobId }: { jobId: string }) {
-  const { report, error, running, run } = useReport<EvalReport>("/api/eval", jobId);
+export function EvalPanel({
+  jobId,
+  report: value,
+  onReport,
+}: {
+  jobId: string;
+  report: EvalReport | null;
+  onReport: Dispatch<SetStateAction<EvalReport | null>>;
+}) {
+  const { report, error, running, run } = useReport<EvalReport>("/api/eval", jobId, value, onReport);
 
   return (
     <Panel

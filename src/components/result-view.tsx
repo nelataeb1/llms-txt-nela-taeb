@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { EvalPanel, ReadinessPanel } from "@/components/insights";
+import type { AuditReport } from "@/lib/audit";
+import type { EvalReport } from "@/lib/eval";
 import { validateLlmsTxt } from "@/lib/validate";
 import type { CrawlOptions, GenerationResult } from "@/lib/types";
 
@@ -22,6 +24,8 @@ export function ResultView({
   const [source, setSource] = useState(result.llmsTxt);
   const [monitorState, setMonitorState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [monitorMessage, setMonitorMessage] = useState("");
+  const [audit, setAudit] = useState<AuditReport | null>(null);
+  const [retrieval, setRetrieval] = useState<EvalReport | null>(null);
 
   const validation = useMemo(() => validateLlmsTxt(source), [source]);
   const errors = validation.issues.filter((issue) => issue.level === "error");
@@ -113,9 +117,9 @@ export function ResultView({
 
         {tab === "pages" && <PagesTable result={result} />}
 
-        {tab === "readiness" && <ReadinessPanel jobId={jobId} />}
+        {tab === "readiness" && <ReadinessPanel jobId={jobId} report={audit} onReport={setAudit} />}
 
-        {tab === "eval" && <EvalPanel jobId={jobId} />}
+        {tab === "eval" && <EvalPanel jobId={jobId} report={retrieval} onReport={setRetrieval} />}
 
         {tab === "checks" && (
           <div className="max-h-[28rem] space-y-2 overflow-auto p-4 text-sm">
