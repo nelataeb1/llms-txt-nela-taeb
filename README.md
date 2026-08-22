@@ -10,23 +10,48 @@ monitored so it is regenerated when the site changes.
 - **Validate** — every generated file is checked against the spec and the results are shown in the UI.
 - **Monitor** — a site can be tracked; a daily cron re-crawls it, diffs the pages, and stores a new
   snapshot only when something actually changed. The latest file is served at `/s/{siteId}/llms.txt`.
-- **AI-readiness audit** — grades the domain the way an answer engine sees it: can GPTBot,
-  OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended fetch it, do they get the
-  same HTML a browser gets, is there an existing (and current) `/llms.txt`, plus sitemap, description,
-  server-rendered content and canonical checks. Each check has a weight, a verdict and a concrete fix.
-- **Retrieval eval** — proves the generated file is actually useful: a model writes questions from the
-  crawled pages, then a second call must pick the right page *seeing only the generated index*.
-  Reported as an accuracy score plus the links whose notes are too ambiguous to disambiguate.
+- **AI-readiness audit** and **retrieval eval** — see [Beyond the spec](#beyond-the-spec).
+
+## Beyond the spec
+
+A valid `llms.txt` is table stakes: the file only matters if AI crawlers can reach the site and if the
+file actually routes an agent to the right page. Two extra tools ship in the result view for that.
+
+**AI-readiness audit** (`POST /api/audit`) — grades the domain the way an answer engine sees it:
+
+- Re-parses `robots.txt` once per bot token (GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot,
+  PerplexityBot, Google-Extended) instead of assuming the `*` group applies to all of them.
+- Re-fetches the entry page with each bot's own user-agent and compares the body size against a
+  browser-like baseline, which surfaces 403s, WAF challenges and cloaking a normal crawl never sees.
+- Checks sitemap coverage, meta-description coverage, server-rendered content, canonical duplication,
+  markdown alternates, and whether an existing `/llms.txt` is present, valid and still current
+  (stale links and missing pages are counted against the crawl).
+- Every check carries a weight, a verdict (`pass`/`warn`/`fail`) and a concrete fix; the weighted
+  total becomes a 0-100 score and an A-F grade.
+
+**Retrieval eval** (`POST /api/eval`) — measures whether the generated file is any good:
+
+- One model call writes realistic user questions from the crawled pages.
+- A second call must answer each question by picking a page while seeing *only* the generated index —
+  no page content — which is exactly the decision a real agent makes.
+- The result is a retrieval-accuracy percentage plus the links whose notes are too ambiguous to
+  disambiguate, i.e. the descriptions worth rewriting.
+
+Both are opt-in (six extra network probes / two LLM calls) so generation itself stays fast.
 
 ## Screenshots
 
-Generating a file (tryprofound.com, 120 pages, spec compliant):
+Generating a file (llmstxt.org, spec compliant, LLM-written descriptions):
 
 ![Generate](docs/generate.png)
 
-AI-readiness audit and retrieval eval for the generated file:
+AI-readiness audit — score, per-crawler access and the weighted checks with fixes:
 
 ![AI readiness](docs/ai-readiness.png)
+![AI readiness checks](docs/ai-readiness-checks.png)
+
+Retrieval eval — how often an agent picks the right page from the index alone:
+
 ![Retrieval eval](docs/retrieval-eval.png)
 
 Monitored sites and a site's snapshot history:
