@@ -141,3 +141,14 @@ URL → crawl (robots + sitemap + links) → extract → classify/rank → group
 `npm run test` covers robots/sitemap parsing, metadata extraction, URL normalization,
 classification and ranking, document generation, spec validation, snapshot diffing, per-bot robots
 evaluation and audit scoring/grading.
+
+## Slide deck
+
+`docs/llms-txt-deck.pptx` is generated from `scripts/build_deck.py`:
+
+```bash
+pip install python-pptx
+python scripts/build_deck.py
+```
+
+Import it into Google Slides with **File → Import slides** and uploading the `.pptx`.
