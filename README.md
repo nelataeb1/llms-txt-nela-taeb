@@ -9,6 +9,17 @@ monitored so it is regenerated when the site changes.
 - **Monitor** — a site can be tracked; a daily cron re-crawls it, diffs the pages, and stores a new
   snapshot only when something actually changed. The latest file is served at `/s/{siteId}/llms.txt`.
 
+## Screenshots
+
+Generating a file (FastAPI docs, 120 pages, spec compliant):
+
+![Generate](docs/generate.png)
+
+Monitored sites and a site's snapshot history:
+
+![Monitored sites](docs/monitored-sites.png)
+![Site history](docs/site-history.png)
+
 ## Quick start
 
 ```bash

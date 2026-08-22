@@ -86,14 +86,16 @@ export function SiteDetail({ siteId }: { siteId: string }) {
 
       <div className="space-y-3">
         <h2 className="text-lg font-medium">History</h2>
-        {data.snapshots.map((snapshot) => (
+        {data.snapshots.map((snapshot, index) => (
           <div key={snapshot.id} className="card p-4">
             <div className="flex items-center justify-between text-sm">
               <span>{new Date(snapshot.createdAt).toLocaleString()}</span>
               <span className="text-[var(--muted)]">{snapshot.pageCount} pages</span>
             </div>
             {snapshot.changes.length === 0 ? (
-              <p className="mt-2 text-sm text-[var(--muted)]">Baseline snapshot.</p>
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                {index === data.snapshots.length - 1 ? "Baseline snapshot." : "Content changed."}
+              </p>
             ) : (
               <ul className="mt-2 space-y-1 text-sm">
                 {snapshot.changes.slice(0, 12).map((change) => (

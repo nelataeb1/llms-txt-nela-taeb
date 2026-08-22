@@ -39,7 +39,8 @@ export async function trackSite(
 
   const previous = await store.latestSnapshot(site.id);
   const snapshot = buildSnapshot(site.id, result, previous);
-  await store.addSnapshot(snapshot);
+  // Re-tracking a site that has not moved should not create a duplicate snapshot.
+  if (snapshot.changed || !previous) await store.addSnapshot(snapshot);
   await store.markSiteChecked(site.id, now);
   return { site, snapshot };
 }
