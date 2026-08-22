@@ -1,5 +1,7 @@
 # llms.txt Generator
 
+**Live app: https://llms-txt-nela-taeb.vercel.app**
+
 Paste a website URL, get a spec-compliant [`llms.txt`](https://llmstxt.org/) back — then keep it
 monitored so it is regenerated when the site changes.
 
@@ -11,7 +13,7 @@ monitored so it is regenerated when the site changes.
 
 ## Screenshots
 
-Generating a file (FastAPI docs, 120 pages, spec compliant):
+Generating a file (tryprofound.com, 120 pages, spec compliant):
 
 ![Generate](docs/generate.png)
 
