@@ -1,13 +1,17 @@
 @import "tailwindcss";
 
+/* Colours mirror the tokens used on tryprofound.com so the tool feels native there. */
 :root {
-  --background: #07070a;
-  --surface: #101017;
-  --surface-2: #16161f;
-  --border: #26262f;
-  --foreground: #ededf2;
-  --muted: #9a9aa8;
-  --accent: #7c5cff;
+  --background: #000000;
+  --surface: #131313;
+  --surface-2: #1c1c1c;
+  --border: #232323;
+  --border-strong: #2c2c2c;
+  --foreground: #edf2f5;
+  --muted: #9f9f9f;
+  --muted-dim: #828282;
+  --accent: #ffea35;
+  --success: #08ffb6;
 }
 
 @theme inline {
@@ -18,75 +22,99 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-inter), "SF Pro Display", system-ui, sans-serif;
+  letter-spacing: -0.011em;
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+/* The marketing site frames its content between two hairline rules. */
+.rails {
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
 }
 
 .card {
   border: 1px solid var(--border);
   background: var(--surface);
-  border-radius: 14px;
+  border-radius: 12px;
 }
 
 .input {
   background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
   padding: 0.75rem 0.9rem;
   width: 100%;
   outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.input::placeholder {
+  color: var(--muted-dim);
 }
 
 .input:focus {
-  border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+  border-color: #4b4b4b;
 }
 
 .btn {
-  border-radius: 10px;
-  padding: 0.7rem 1.1rem;
-  font-weight: 600;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  border-radius: 8px;
+  padding: 0.6rem 1.1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease, opacity 0.2s ease;
   cursor: pointer;
 }
 
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .btn-primary {
-  background: var(--accent);
-  color: white;
+  background: #ffffff;
+  color: #131313;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 85%, white);
+  background: #cdcdcd;
 }
 
 .btn-ghost {
-  background: var(--surface-2);
-  border: 1px solid var(--border);
+  background: #252525;
   color: var(--foreground);
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--border);
+  background: #333333;
 }
 
 .tag {
   font-size: 0.72rem;
-  padding: 0.15rem 0.5rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  border: 1px solid var(--border);
+  background: var(--surface-2);
   color: var(--muted);
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.tag:hover {
+  background: #252525;
+}
+
+.eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-dim);
 }
