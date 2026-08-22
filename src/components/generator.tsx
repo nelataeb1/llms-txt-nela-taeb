@@ -122,7 +122,9 @@ export function Generator() {
 
       {job && !result && <Progress job={job} />}
 
-      {result && <ResultView result={result} url={url} options={options} />}
+      {result && job && (
+        <ResultView result={result} url={url} options={options} jobId={job.jobId} />
+      )}
     </div>
   );
 }

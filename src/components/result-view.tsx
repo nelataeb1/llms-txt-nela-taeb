@@ -1,19 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { EvalPanel, ReadinessPanel } from "@/components/insights";
 import { validateLlmsTxt } from "@/lib/validate";
 import type { CrawlOptions, GenerationResult } from "@/lib/types";
 
-type Tab = "file" | "full" | "pages" | "checks";
+type Tab = "file" | "full" | "pages" | "checks" | "readiness" | "eval";
 
 export function ResultView({
   result,
   url,
   options,
+  jobId,
 }: {
   result: GenerationResult;
   url: string;
   options: CrawlOptions;
+  jobId: string;
 }) {
   const [tab, setTab] = useState<Tab>("file");
   const [source, setSource] = useState(result.llmsTxt);
@@ -29,6 +32,8 @@ export function ResultView({
     ...(result.llmsFullTxt ? [{ id: "full" as Tab, label: "llms-full.txt" }] : []),
     { id: "pages", label: `Pages (${result.pages.length})` },
     { id: "checks", label: `Spec checks (${errors.length + warnings.length})` },
+    { id: "readiness", label: "AI readiness" },
+    { id: "eval", label: "Retrieval eval" },
   ];
 
   async function monitor() {
@@ -107,6 +112,10 @@ export function ResultView({
         )}
 
         {tab === "pages" && <PagesTable result={result} />}
+
+        {tab === "readiness" && <ReadinessPanel jobId={jobId} />}
+
+        {tab === "eval" && <EvalPanel jobId={jobId} />}
 
         {tab === "checks" && (
           <div className="max-h-[28rem] space-y-2 overflow-auto p-4 text-sm">

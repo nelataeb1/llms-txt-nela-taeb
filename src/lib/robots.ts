@@ -33,7 +33,11 @@ export async function loadRobots(origin: string): Promise<Robots> {
   return parseRobots(body);
 }
 
-export function parseRobots(body: string): Robots {
+/**
+ * Parses robots.txt from the point of view of `userAgent` (defaults to this
+ * crawler), so the audit can ask the same file "what does GPTBot see?".
+ */
+export function parseRobots(body: string, userAgent = USER_AGENT): Robots {
   const sitemaps: string[] = [];
   const groups = new Map<string, Rule[]>();
   const delays = new Map<string, number>();
@@ -76,7 +80,7 @@ export function parseRobots(body: string): Robots {
     }
   }
 
-  const ourAgent = USER_AGENT.split("/")[0].toLowerCase();
+  const ourAgent = userAgent.split("/")[0].trim().toLowerCase();
   const agentKey = [ourAgent, "*"].find((key) => agents.has(key));
   const rules = agentKey ? (groups.get(agentKey) ?? []) : [];
   const crawlDelayMs = agentKey ? (delays.get(agentKey) ?? 0) : 0;

@@ -10,6 +10,13 @@ monitored so it is regenerated when the site changes.
 - **Validate** — every generated file is checked against the spec and the results are shown in the UI.
 - **Monitor** — a site can be tracked; a daily cron re-crawls it, diffs the pages, and stores a new
   snapshot only when something actually changed. The latest file is served at `/s/{siteId}/llms.txt`.
+- **AI-readiness audit** — grades the domain the way an answer engine sees it: can GPTBot,
+  OAI-SearchBot, ChatGPT-User, ClaudeBot, PerplexityBot and Google-Extended fetch it, do they get the
+  same HTML a browser gets, is there an existing (and current) `/llms.txt`, plus sitemap, description,
+  server-rendered content and canonical checks. Each check has a weight, a verdict and a concrete fix.
+- **Retrieval eval** — proves the generated file is actually useful: a model writes questions from the
+  crawled pages, then a second call must pick the right page *seeing only the generated index*.
+  Reported as an accuracy score plus the links whose notes are too ambiguous to disambiguate.
 
 ## Screenshots
 
@@ -89,6 +96,11 @@ URL → crawl (robots + sitemap + links) → extract → classify/rank → group
 - **`src/lib/llm.ts`** — optional enrichment. The model only ever picks from numbered candidate
   pages, so it cannot invent URLs; any failure falls back to the heuristic document.
 - **`src/lib/validate.ts`** — the spec checker used by the UI and by `/api/validate`.
+- **`src/lib/audit.ts`** — the readiness audit. Robots is re-parsed once per bot token, then each bot
+  fetches the entry page with its own user-agent and the body size is compared against a browser-like
+  baseline to catch blocking, WAF challenges and cloaking that a normal crawl never sees.
+- **`src/lib/eval.ts`** — the retrieval eval. Both LLM calls exchange link ids rather than URLs, so a
+  hallucinated answer is rejected instead of silently scored.
 - **`src/lib/monitor.ts` / `diff.ts`** — snapshots, per-page added/removed/changed diffs, and the
   refresh routine shared by the manual button and the cron job.
 
@@ -102,6 +114,8 @@ URL → crawl (robots + sitemap + links) → extract → classify/rank → group
   only relabels and regroups pages it was given.
 - **Hash-based change detection.** Page-level hashes make diffs cheap and let monitoring skip
   writing a snapshot when nothing changed.
+- **Audit and eval are opt-in, post-generation.** Both cost extra network round-trips (six bot probes)
+  or LLM calls, so they run from their own endpoints behind a button rather than slowing generation.
 
 ## API
 
@@ -110,6 +124,8 @@ URL → crawl (robots + sitemap + links) → extract → classify/rank → group
 | `POST /api/generate` | Starts a crawl, returns job id, progress and the result when done |
 | `POST /api/jobs/{id}` | Advances a running crawl by one slice |
 | `POST /api/validate` | Validates an arbitrary `llms.txt` document |
+| `POST /api/audit` | Runs the AI-readiness audit for a finished job (`{ jobId }`) |
+| `POST /api/eval` | Scores retrieval accuracy of a finished job's index (`{ jobId }`, needs `OPENAI_API_KEY`) |
 | `GET/POST /api/sites` | Lists monitored sites / adds one with a baseline snapshot |
 | `POST /api/sites/{id}/refresh` | Re-crawls a site and diffs it against the last snapshot |
 | `GET /s/{id}/llms.txt` | Serves the latest generated file as `text/plain` |
@@ -118,4 +134,5 @@ URL → crawl (robots + sitemap + links) → extract → classify/rank → group
 ## Tests
 
 `npm run test` covers robots/sitemap parsing, metadata extraction, URL normalization,
-classification and ranking, document generation, spec validation and snapshot diffing.
+classification and ranking, document generation, spec validation, snapshot diffing, per-bot robots
+evaluation and audit scoring/grading.

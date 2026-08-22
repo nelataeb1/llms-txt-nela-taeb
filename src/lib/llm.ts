@@ -2,8 +2,11 @@ import OpenAI from "openai";
 import { firstSentences } from "./extract";
 import type { CrawledPage, LlmsDocument, LlmsLink, LlmsSection } from "./types";
 
-const MODEL = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
 const MAX_PAGES = 120;
+
+export function openaiModel(): string {
+  return process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+}
 
 export function llmAvailable(): boolean {
   return Boolean(process.env.OPENAI_API_KEY);
@@ -61,7 +64,7 @@ export async function enrichWithLlm(
   try {
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const completion = await client.chat.completions.create({
-      model: MODEL,
+      model: openaiModel(),
       temperature: 0.2,
       response_format: { type: "json_object" },
       messages: [
