@@ -1,0 +1,8 @@
+flowchart LR
+  A["initCrawl(url, options)<br/><small>robots.txt + sitemap seed</small>"] --> B{"frontier empty<br/>or budget hit?"}
+  B -- "no" --> C["crawlSlice(state, 20s)<br/><small>batch of 6, concurrent fetch</small>"]
+  C --> D["allowed()<br/><small>robots · scope · depth · likely page</small>"]
+  D --> E["extractPage()<br/><small>title · description · links · hash</small>"]
+  E --> F["persist state<br/><small>serializable JSON</small>"]
+  F --> B
+  B -- "yes" --> G["buildResult(state)<br/><small>ranked pages + counters</small>"]

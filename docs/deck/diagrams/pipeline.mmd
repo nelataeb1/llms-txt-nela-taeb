@@ -1,0 +1,8 @@
+flowchart LR
+  U["URL"] --> C["Crawl<br/><small>robots · sitemap · links</small>"]
+  C --> E["Extract<br/><small>title · meta · hash</small>"]
+  E --> K["Classify + rank<br/><small>page kind · score</small>"]
+  K --> G["Group<br/><small>sections · link budget</small>"]
+  G --> R["Render<br/><small>llms.txt · llms-full.txt</small>"]
+  R --> V["Validate<br/><small>spec check</small>"]
+  L["LLM enrichment<br/><small>optional · gpt-4o-mini</small>"] -.-> G

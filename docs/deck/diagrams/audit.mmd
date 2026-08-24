@@ -1,0 +1,10 @@
+flowchart LR
+  D["domain"] --> RB["robots.txt rules<br/><small>per user-agent</small>"]
+  D --> FE["fetch entry page as each bot<br/><small>GPTBot · OAI-SearchBot · ChatGPT-User<br/>ClaudeBot · PerplexityBot · Google-Extended</small>"]
+  FE --> CL{"body vs browser baseline"}
+  CL -- "much smaller" --> WAF["blocked / cloaked"]
+  CL -- "comparable" --> OK["reachable"]
+  RB --> SC["weighted checks<br/><small>+ sitemap · descriptions · thin & duplicate pages<br/>markdown alternates · canonical · existing /llms.txt</small>"]
+  WAF --> SC
+  OK --> SC
+  SC --> GR["score → grade A–F<br/><small>each failure ships a fix</small>"]

@@ -1,0 +1,7 @@
+flowchart LR
+  T["daily cron<br/><small>or refresh button</small>"] --> RS["refreshSite()<br/><small>re-crawl, same stored options</small>"]
+  RS --> DF["diffPages()<br/><small>added · removed · changed</small>"]
+  DF --> H{"snapshotHash<br/>changed?"}
+  H -- "yes" --> W["write snapshot<br/><small>llms.txt + changes</small>"]
+  H -- "no" --> SK["skip write<br/><small>update lastCheckedAt</small>"]
+  W --> SRV["GET /s/{siteId}/llms.txt"]

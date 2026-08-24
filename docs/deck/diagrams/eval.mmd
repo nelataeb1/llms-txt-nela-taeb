@@ -1,0 +1,8 @@
+flowchart LR
+  W["writer LLM<br/><small>sees crawled pages + content</small>"] --> Q["8 questions<br/><small>each tagged with a link id</small>"]
+  Q --> R["reader LLM<br/><small>sees only llms.txt</small>"]
+  R --> V{"answer id<br/>matches?"}
+  V -- "yes" --> C["correct"]
+  V -- "no" --> M["miss<br/><small>names the link picked and<br/>why the note was ambiguous</small>"]
+  C --> S["accuracy %<br/><small>+ ambiguous links</small>"]
+  M --> S

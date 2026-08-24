@@ -1,0 +1,9 @@
+flowchart LR
+  S1["page kind<br/><small>home 100 · docs 40 · api 38 · legal 2</small>"] --> R
+  S2["depth penalty<br/><small>-8 per level</small>"] --> R
+  S3["inbound links + nav<br/><small>capped at 12 · +18 in nav</small>"] --> R
+  S4["sitemap · markdown alternate · description"] --> R
+  S5["content volume<br/><small>penalty for pagination</small>"] --> R
+  R["rankPages()<br/><small>score descending</small>"] --> G["groupPages()<br/><small>sections in fixed order</small>"]
+  G --> B["link budget<br/><small>25 per section · 120 total</small>"]
+  B --> O["Optional section<br/><small>legal + overflow</small>"]

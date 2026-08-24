@@ -1,0 +1,26 @@
+flowchart LR
+  subgraph client["Browser"]
+    UI["Next.js UI<br/><small>generate · history · audit · eval</small>"]
+  end
+  subgraph vercel["Vercel — serverless"]
+    GEN["POST /api/generate<br/><small>start + advance job</small>"]
+    SITES["/api/sites<br/><small>track · refresh · history</small>"]
+    RAW["GET /s/{siteId}/llms.txt<br/><small>text/plain</small>"]
+    EXTRA["/api/audit · /api/eval"]
+    CRON["Vercel cron<br/><small>daily 03:00 UTC</small>"]
+  end
+  subgraph lib["src/lib — pure functions"]
+    PIPE["crawl · extract · classify<br/>group · generate · validate"]
+    MON["monitor · diff"]
+  end
+  DB[("Neon Postgres<br/><small>or in-memory store</small>")]
+  OAI["OpenAI<br/><small>gpt-4o-mini · optional</small>"]
+
+  UI --> GEN --> PIPE
+  UI --> SITES --> MON
+  UI --> EXTRA --> PIPE
+  CRON --> MON --> PIPE
+  PIPE --> DB
+  MON --> DB
+  RAW --> DB
+  PIPE -.-> OAI

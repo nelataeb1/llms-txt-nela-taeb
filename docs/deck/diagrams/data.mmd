@@ -1,0 +1,8 @@
+flowchart LR
+  subgraph iface["Store interface"]
+    ST["sites<br/><small>id · url · options · monitoring · lastCheckedAt</small>"]
+    SN["snapshots<br/><small>id · siteId · llmsTxt · contentHash · pages · changes</small>"]
+    JB["jobs<br/><small>id · crawl state · progress · result · status</small>"]
+  end
+  iface --> PG[("Neon Postgres<br/><small>DATABASE_URL set</small>")]
+  iface --> MEM["in-memory map<br/><small>zero-config default</small>"]
