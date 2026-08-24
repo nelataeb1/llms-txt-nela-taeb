@@ -15,6 +15,25 @@ export interface Job {
   updatedAt: string;
 }
 
+/** Lightweight counters written while a slice runs, so the UI can tick between slices. */
+export interface JobHeartbeat {
+  fetched: number;
+  queued: number;
+  at: string;
+}
+
+/** Counters only, so the status poll never reads the whole crawl state back. */
+export interface JobSummary {
+  id: string;
+  status: JobStatus;
+  target: number;
+  fetched: number;
+  queued: number;
+  updatedAt: string;
+  error: string | null;
+  heartbeat: JobHeartbeat | null;
+}
+
 export interface Site {
   id: string;
   url: string;
@@ -48,6 +67,8 @@ export interface Store {
   createJob(job: Job): Promise<void>;
   getJob(id: string): Promise<Job | null>;
   updateJob(job: Job): Promise<void>;
+  setJobHeartbeat(id: string, heartbeat: JobHeartbeat): Promise<void>;
+  getJobSummary(id: string): Promise<JobSummary | null>;
 
   upsertSite(site: Site): Promise<Site>;
   getSite(id: string): Promise<Site | null>;
