@@ -140,6 +140,13 @@ URL → crawl (robots + sitemap + links) → extract → classify/rank → group
   without one and supplies nav/inbound-link signals used for ranking.
 - **Slice-based crawling.** Keeps every request under serverless limits and makes progress visible
   in the UI instead of blocking on one long request.
+- **Budgeted crawl, not exhaustive.** Discovery is unbounded (the frontier routinely holds thousands
+  of URLs) but fetching stops at `maxPages` — 500 by default, adjustable in Options. The frontier is
+  ordered sitemap-first and shallow-first, so the budget is spent on the pages an agent would actually
+  want. A full crawl would cost minutes and thousands of requests to a stranger's origin, and would
+  not change the output: `llms.txt` is a curated index capped at ~120 links so it stays cheap to read
+  in a model's context. Paginated archives, tag pages and filter permutations are exactly what inflates
+  the queue and exactly what does not belong in the file.
 - **LLM optional, never authoritative.** The heuristic path always produces a valid file; the LLM
   only relabels and regroups pages it was given.
 - **Hash-based change detection.** Page-level hashes make diffs cheap and let monitoring skip

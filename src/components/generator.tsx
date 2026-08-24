@@ -134,7 +134,8 @@ function Progress({ job }: { job: JobResponse }) {
     <div className="card p-5 space-y-3">
       <div className="flex items-center justify-between text-sm">
         <span>
-          Crawled <strong>{job.progress.fetched}</strong> pages · {job.progress.queued} queued
+          Crawled <strong>{job.progress.fetched}</strong> of {job.progress.target} pages ·{" "}
+          {job.progress.queued.toLocaleString()} discovered
         </span>
         <span className="text-[var(--muted)]">{job.progress.percent}%</span>
       </div>
@@ -172,7 +173,7 @@ function OptionsPanel({
         <input
           type="range"
           min={10}
-          max={400}
+          max={500}
           step={10}
           value={options.maxPages}
           onChange={(event) => set("maxPages", Number(event.target.value))}
