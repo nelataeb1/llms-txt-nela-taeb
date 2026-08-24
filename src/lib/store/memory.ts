@@ -1,7 +1,8 @@
-import type { Job, Site, Snapshot, Store } from "./types";
+import type { Job, JobHeartbeat, JobSummary, Site, Snapshot, Store } from "./types";
 
 interface MemoryData {
   jobs: Map<string, Job>;
+  heartbeats: Map<string, JobHeartbeat>;
   sites: Map<string, Site>;
   snapshots: Map<string, Snapshot[]>;
 }
@@ -10,6 +11,7 @@ interface MemoryData {
 const globalData = globalThis as unknown as { __llmsTxtStore?: MemoryData };
 const data: MemoryData = (globalData.__llmsTxtStore ??= {
   jobs: new Map(),
+  heartbeats: new Map(),
   sites: new Map(),
   snapshots: new Map(),
 });
@@ -27,6 +29,25 @@ export class MemoryStore implements Store {
 
   async updateJob(job: Job) {
     data.jobs.set(job.id, job);
+  }
+
+  async setJobHeartbeat(id: string, heartbeat: JobHeartbeat) {
+    data.heartbeats.set(id, heartbeat);
+  }
+
+  async getJobSummary(id: string): Promise<JobSummary | null> {
+    const job = data.jobs.get(id);
+    if (!job) return null;
+    return {
+      id: job.id,
+      status: job.status,
+      target: job.options.maxPages,
+      fetched: job.state.pages.length,
+      queued: job.state.frontier.length,
+      updatedAt: job.updatedAt,
+      error: job.error,
+      heartbeat: data.heartbeats.get(id) ?? null,
+    };
   }
 
   async upsertSite(site: Site) {
@@ -80,6 +101,9 @@ export class MemoryStore implements Store {
   private evictOldJobs() {
     if (data.jobs.size <= 50) return;
     const oldest = [...data.jobs.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-    for (const job of oldest.slice(0, data.jobs.size - 50)) data.jobs.delete(job.id);
+    for (const job of oldest.slice(0, data.jobs.size - 50)) {
+      data.jobs.delete(job.id);
+      data.heartbeats.delete(job.id);
+    }
   }
 }

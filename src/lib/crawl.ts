@@ -79,8 +79,15 @@ export async function initCrawl(rawEntryUrl: string, options: CrawlOptions): Pro
   return state;
 }
 
-/** Crawls until the page budget is hit or `budgetMs` elapses. */
-export async function crawlSlice(state: CrawlState, budgetMs = 20_000): Promise<CrawlState> {
+/**
+ * Crawls until the page budget is hit or `budgetMs` elapses. `onBatch` runs after
+ * every fetched batch so callers can publish progress mid-slice.
+ */
+export async function crawlSlice(
+  state: CrawlState,
+  budgetMs = 20_000,
+  onBatch?: (state: CrawlState) => void,
+): Promise<CrawlState> {
   const deadline = Date.now() + budgetMs;
   const robots = state.options.respectRobots ? await loadRobots(state.origin) : undefined;
   const visited = new Set(state.visited);
@@ -121,7 +128,10 @@ export async function crawlSlice(state: CrawlState, budgetMs = 20_000): Promise<
       }
       const { page, links, navLinks } = result;
       visited.add(page.url);
-      if (state.pages.length < state.options.maxPages && !state.pages.some((seen) => seen.url === page.url)) {
+      if (
+        state.pages.length < state.options.maxPages &&
+        !state.pages.some((seen) => seen.url === page.url)
+      ) {
         state.pages.push(page);
       }
       if (!state.siteName && result.siteName) state.siteName = result.siteName;
@@ -137,6 +147,7 @@ export async function crawlSlice(state: CrawlState, budgetMs = 20_000): Promise<
       }
     }
 
+    onBatch?.(state);
     if (robots?.crawlDelayMs) await sleep(robots.crawlDelayMs);
   }
 
@@ -246,7 +257,11 @@ export function crawlStats(state: CrawlState): CrawlStats {
     skipped: state.skipped,
     sitemapUrls: state.sitemapCount,
     discoveredVia:
-      state.usedSitemap && state.usedLinks ? "sitemap+links" : state.usedSitemap ? "sitemap" : "links",
+      state.usedSitemap && state.usedLinks
+        ? "sitemap+links"
+        : state.usedSitemap
+          ? "sitemap"
+          : "links",
   };
 }
 

@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import type { Job, Site, Snapshot, Store } from "./types";
+import type { Job, JobHeartbeat, JobSummary, Site, Snapshot, Store } from "./types";
 
 type Row = Record<string, unknown>;
 
@@ -13,6 +13,12 @@ const SCHEMA = [
      result jsonb,
      error text,
      created_at timestamptz not null default now(),
+     updated_at timestamptz not null default now()
+   )`,
+  `create table if not exists job_heartbeats (
+     job_id text primary key,
+     fetched integer not null,
+     queued integer not null,
      updated_at timestamptz not null default now()
    )`,
   `create table if not exists sites (
@@ -76,6 +82,47 @@ export class PostgresStore implements Store {
       `update jobs set status = $2, state = $3, result = $4, error = $5, updated_at = now() where id = $1`,
       [job.id, job.status, job.state, job.result, job.error],
     );
+  }
+
+  async setJobHeartbeat(id: string, heartbeat: JobHeartbeat) {
+    await this.query(
+      `insert into job_heartbeats (job_id, fetched, queued, updated_at)
+       values ($1, $2, $3, $4)
+       on conflict (job_id) do update set
+         fetched = excluded.fetched, queued = excluded.queued, updated_at = excluded.updated_at`,
+      [id, heartbeat.fetched, heartbeat.queued, heartbeat.at],
+    );
+  }
+
+  async getJobSummary(id: string): Promise<JobSummary | null> {
+    const [row] = await this.query(
+      `select j.id, j.status, j.error, j.updated_at,
+              (j.options->>'maxPages')::int as target,
+              jsonb_array_length(j.state->'pages') as fetched,
+              jsonb_array_length(j.state->'frontier') as queued,
+              h.fetched as beat_fetched, h.queued as beat_queued, h.updated_at as beat_at
+         from jobs j
+         left join job_heartbeats h on h.job_id = j.id
+        where j.id = $1`,
+      [id],
+    );
+    if (!row) return null;
+    return {
+      id: String(row.id),
+      status: row.status as JobSummary["status"],
+      target: Number(row.target),
+      fetched: Number(row.fetched),
+      queued: Number(row.queued),
+      updatedAt: toIso(row.updated_at),
+      error: (row.error ?? null) as string | null,
+      heartbeat: row.beat_at
+        ? {
+            fetched: Number(row.beat_fetched),
+            queued: Number(row.beat_queued),
+            at: toIso(row.beat_at),
+          }
+        : null,
+    };
   }
 
   async upsertSite(site: Site) {

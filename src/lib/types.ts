@@ -53,7 +53,7 @@ export interface CrawlOptions {
 }
 
 export const DEFAULT_CRAWL_OPTIONS: CrawlOptions = {
-  maxPages: 120,
+  maxPages: 500,
   maxDepth: 3,
   scopeToPath: false,
   respectRobots: true,

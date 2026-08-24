@@ -4,14 +4,24 @@ import { useCallback, useRef, useState } from "react";
 import { ResultView } from "@/components/result-view";
 import { DEFAULT_CRAWL_OPTIONS, type CrawlOptions, type GenerationResult } from "@/lib/types";
 
+interface Progress {
+  fetched: number;
+  queued: number;
+  target: number;
+  percent: number;
+}
+
 interface JobResponse {
   jobId: string;
   status: "running" | "done" | "error";
-  progress: { fetched: number; queued: number; target: number; percent: number };
+  progress: Progress;
   log: string[];
   result: GenerationResult | null;
   error: string | null;
 }
+
+/** The status poll runs while a slice is in flight, so counters tick between slices. */
+const POLL_MS = 2_000;
 
 const EXAMPLES = ["https://tryprofound.com", "https://nextjs.org/docs", "https://docs.stripe.com"];
 
@@ -22,7 +32,22 @@ export function Generator() {
   const [job, setJob] = useState<JobResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [live, setLive] = useState<Progress | null>(null);
   const cancelled = useRef(false);
+
+  const watch = useCallback((jobId: string) => {
+    const timer = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/jobs/${jobId}`);
+        if (!response.ok) return;
+        const payload = (await response.json()) as { progress: Progress };
+        setLive(payload.progress);
+      } catch {
+        // A dropped status poll is harmless; the next tick retries.
+      }
+    }, POLL_MS);
+    return () => clearInterval(timer);
+  }, []);
 
   const poll = useCallback(async (jobId: string) => {
     let current: JobResponse | null = null;
@@ -46,7 +71,9 @@ export function Generator() {
     setRunning(true);
     setError(null);
     setJob(null);
+    setLive(null);
 
+    let stopWatching: (() => void) | undefined;
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
@@ -56,10 +83,14 @@ export function Generator() {
       const payload = (await response.json()) as JobResponse & { error?: string };
       if (!response.ok) throw new Error(payload.error ?? "Could not start the crawl");
       setJob(payload);
-      if (payload.status === "running") await poll(payload.jobId);
+      if (payload.status === "running") {
+        stopWatching = watch(payload.jobId);
+        await poll(payload.jobId);
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
+      stopWatching?.();
       setRunning(false);
     }
   }
@@ -120,7 +151,7 @@ export function Generator() {
         <div className="card border-red-500/40 bg-red-500/5 p-4 text-sm text-red-300">{error}</div>
       )}
 
-      {job && !result && <Progress job={job} />}
+      {job && !result && <ProgressCard job={job} live={live} />}
 
       {result && job && (
         <ResultView result={result} url={url} options={options} jobId={job.jobId} />
@@ -129,19 +160,24 @@ export function Generator() {
   );
 }
 
-function Progress({ job }: { job: JobResponse }) {
+function ProgressCard({ job, live }: { job: JobResponse; live: Progress | null }) {
+  // Whichever view saw more pages is the fresher one.
+  const progress = live && live.fetched >= job.progress.fetched ? live : job.progress;
   return (
     <div className="card p-5 space-y-3">
       <div className="flex items-center justify-between text-sm">
         <span>
-          Crawled <strong>{job.progress.fetched}</strong> pages · {job.progress.queued} queued
+          <strong>{progress.fetched.toLocaleString()}</strong> pages crawled out of{" "}
+          {progress.target}
+          {" · "}
+          {progress.queued.toLocaleString()} discovered
         </span>
-        <span className="text-[var(--muted)]">{job.progress.percent}%</span>
+        <span className="text-[var(--muted)]">{progress.percent}%</span>
       </div>
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-2)]">
         <div
           className="h-full rounded-full bg-[var(--accent)] transition-all"
-          style={{ width: `${job.progress.percent}%` }}
+          style={{ width: `${progress.percent}%` }}
         />
       </div>
       {job.log.length > 0 && (
@@ -172,7 +208,7 @@ function OptionsPanel({
         <input
           type="range"
           min={10}
-          max={400}
+          max={500}
           step={10}
           value={options.maxPages}
           onChange={(event) => set("maxPages", Number(event.target.value))}
