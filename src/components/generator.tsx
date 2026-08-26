@@ -232,11 +232,6 @@ function OptionsPanel({
         onChange={(value) => set("useLlm", value)}
       />
       <Toggle
-        label="Respect robots.txt"
-        checked={options.respectRobots}
-        onChange={(value) => set("respectRobots", value)}
-      />
-      <Toggle
         label="Only crawl below the URL's path"
         checked={options.scopeToPath}
         onChange={(value) => set("scopeToPath", value)}
