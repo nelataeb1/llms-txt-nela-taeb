@@ -11,17 +11,16 @@ export default function Home() {
           legible to AI agents
         </h1>
         <p className="mx-auto max-w-xl text-[15px] leading-relaxed text-[var(--muted)]">
-          Point it at a URL. It reads sitemaps, crawls what is missing, ranks the pages an agent
-          actually needs and writes a file that follows the{" "}
+          Paste in a URL. We&rsquo;ll read the site, work out which pages matter, and write you a{" "}
           <a
             className="text-white underline decoration-[#4b4b4b] underline-offset-4 hover:decoration-white"
             href="https://llmstxt.org/"
             target="_blank"
             rel="noreferrer"
           >
-            llmstxt.org
+            spec-compliant
           </a>{" "}
-          spec — then re-crawls on a schedule and tells you what changed.
+          llms.txt. Track the site and we&rsquo;ll keep it current.
         </p>
       </section>
       <Generator />
